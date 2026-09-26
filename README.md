@@ -47,12 +47,15 @@ Yu `/goal`指示(2026-09-26)「スプレッドシートベースの動的サー�
 3. デプロイ→新しいデプロイ→ウェブアプリ→アクセス「全員」→デプロイ→アクセス許可承認
 4. 発行されたURL(`https://script.google.com/macros/s/xxxxx/exec`)をClaudeに伝える
 
-### 方法B: ターミナル1コマンド+ブラウザで1回クリックのみ(それ以降は全自動)
+### 方法B: 1コマンド実行のみ(最速)
 
-1. `npx @google/clasp login` を実行(ブラウザが開くので「許可」を1回クリック)
-2. https://script.google.com/home/usersettings を開き「Google Apps Script API」をON(初回のみ)
-3. `bash setup-apps-script.sh` を実行(プロジェクト作成・コード配置・Webアプリデプロイまで全自動)
-4. 表示されたURLをClaudeに伝える
+1. https://script.google.com/home/usersettings を開き「Google Apps Script API」をON(初回のみ、既にONなら不要)
+2. ターミナルで以下を実行:
+   ```
+   cd ~/Documents/cowork/世界EC/sheets-mvp && bash go.sh
+   ```
+3. ブラウザが自動で開くので「許可」をクリック(それ以外の操作は不要、スクリプトが全部やる)
+4. 最後に表示されたURLをClaudeに伝える
 
 → どちらの方法でも、URLを伝えた後はClaudeがStripe API経由でWebhook登録を代行し、全工程が完了する。
 

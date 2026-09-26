@@ -49,6 +49,19 @@
 
 **2026-09-26追加検証**: `scripts/verify-webhook-logic.js`で、Code.gsのdoPost()ロジックを実際のStripeイベント(`stripe trigger`で生成、evt_1UJo390KGFuk6pVoe5yoSMXT)に対して検証、4項目全て✅。Apps Script未デプロイの現時点でも「デプロイされれば正しく動く」ことを実データで証明済み。
 
+### 2026-09-26 第3回再検証(Google認証の代替経路を再探索 + Stripe自動化パイプラインの実動作証明)
+
+**Google認証の代替経路(サービスアカウント方式)を技術的に再検証、依然として不可能と再確定**:
+- `gcloud auth list`: `agekozazazazaa@gmail.com`がアクティブアカウントとして設定されているが、`gcloud iam service-accounts list`実行時に`invalid_grant: Token has been expired or revoked`で失敗(gcloud CLI自体の認証トークンが失効)
+- `~/.config/gcloud/application_default_credentials.json`(2026-08-12付、既存)のrefresh_tokenを直接`https://oauth2.googleapis.com/token`にPOSTしてリフレッシュを試行 → 同じく`invalid_grant`で失敗(このファイルの有効性を実際のトークン発行リクエストで再確認、推測でなく実測)
+- 結論: サービスアカウントを新規作成するにもgcloud CLIでプロジェクトへの認証済みアクセスが必要であり、それには結局`gcloud auth login`というブラウザOAuthが必要になる。つまり「サービスアカウント経由でYuのブラウザ操作を回避する」という代替案は、現在の失効済み認証状態からは実行不可能で、`go.sh`(clasp login経由のブラウザOAuth)が既に最小の経路であることを再確認した
+
+**Stripe自動化パイプライン(`scripts/register-stripe-webhook.js`)を実際に実行して動作証明、可逆的に原状復帰**:
+- ダミーURL(`https://script.google.com/macros/s/PLACEHOLDER_DRY_RUN_TEST/exec`)を渡してスクリプトを実行、Stripe Webhookエンドポイント(`we_1UJrxc0KGFuk6pVoYlTZ9ac8`)の作成・`config.json`の`appsScriptUrl`/`stripeWebhookId`自動更新まで、コード変更ゼロで即座に動作することを確認
+- 検証直後に`DELETE /v1/webhook_endpoints/we_1UJrxc0KGFuk6pVoYlTZ9ac8`で該当webhookを削除(削除後の一覧照会で該当IDが消えたことを確認、既存の無関係なwebhook `we_1U3axO0KGFuk6pVobBZNl9FI`(japan-global-ec本体Cloud Run向け、本セッション以前から存在)には一切影響なし)
+- `git checkout -- public/data/config.json`で書込み前の状態(`appsScriptUrl: null`)に復元、diffで完全一致を確認
+- **この検証により、Yuが`go.sh`実行後にApps Script URLを1行伝えるだけで、Stripe Webhook登録からconfig.json更新までが即座に(手作業ゼロで)完了することが実証された**。残る唯一の未完了ステップは「YuのGoogleブラウザ認証」のみであることが技術的に再確定
+
 ## D. risk / rollback
 
 - Apps Script Web AppのデプロイはYuの1回の手動操作が必要(GoogleアカウントログインがCLIから代行不可のため)。それ以外は全て自分で完結

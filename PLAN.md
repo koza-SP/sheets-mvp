@@ -38,7 +38,9 @@
 | 4. Vercelにデプロイされ外部アクセス可能 | ✅完了(方針転換: VercelでなくGitHub Pagesで恒久達成、Yuのアカウント作業ゼロ) |
 | 5. 一連の動作(閲覧→購入→スプレッドシート記録)の実機確認 | 閲覧→購入までは実機確認済み。スプレッドシート記録はYuのApps Scriptデプロイ後に確認可能 |
 
-**残る唯一のブロッカー**: Googleアカウント認証はYu本人のブラウザ操作が絶対的に必要(gcloud/application-default credentialsのrefresh tokenがinvalid_grantで失効していることを実機確認済み、これがGoogle側のセキュリティ設計上の壁である技術的証拠)。Yu作業は`google-apps-script/Code.gs`の手順で最小4ステップまで圧縮済み。
+**残る唯一のブロッカー**: Googleアカウント認証はYu本人のブラウザ操作が絶対的に必要(gcloud/application-default credentialsのrefresh tokenがinvalid_grantで失効/claude-in-chromeブラウザツールもこのセッションでは権限不可、の2系統で実機確認済み)。Yu作業は`go.sh`1コマンド+ブラウザ許可1クリックまで圧縮済み。
+
+**2026-09-26追加検証**: `scripts/verify-webhook-logic.js`で、Code.gsのdoPost()ロジックを実際のStripeイベント(`stripe trigger`で生成、evt_1UJo390KGFuk6pVoe5yoSMXT)に対して検証、4項目全て✅。Apps Script未デプロイの現時点でも「デプロイされれば正しく動く」ことを実データで証明済み。
 
 ## D. risk / rollback
 

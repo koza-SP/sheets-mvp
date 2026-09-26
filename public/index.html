@@ -86,13 +86,19 @@
       `).join('');
     }
 
-    // 決済完了後のリダイレクト確認(?success=1 / ?canceled=1)
+    // 決済完了後のリダイレクト確認(?success=1&session_id=xxx / ?canceled=1)
+    // 2026-09-26改訂: Payment Linkのafter_completionに{CHECKOUT_SESSION_ID}テンプレート変数を
+    // 追加し、実際の注文番号(Stripe Checkout Session ID)を購入完了画面に表示できるようにした。
     (function checkReturnStatus() {
       const params = new URLSearchParams(window.location.search);
       const statusEl = document.getElementById('status');
+      const sessionId = params.get('session_id');
       if (params.get('success') === '1') {
         statusEl.className = 'ok';
-        statusEl.textContent = '✓ 決済が完了しました(test mode)。注文はスプレッドシートに記録される設計です(要Apps Script接続)。';
+        const idLine = sessionId && !sessionId.startsWith('{')
+          ? `<br><span style="font-family:ui-monospace,monospace;font-size:11px;">注文番号: ${sessionId}</span>`
+          : '';
+        statusEl.innerHTML = `✓ 決済が完了しました(test mode)。${idLine}<br>この注文はGoogleスプレッドシートに記録される設計です(Apps Script接続完了後に有効化)。`;
       } else if (params.get('canceled') === '1') {
         statusEl.className = 'err';
         statusEl.textContent = '決済がキャンセルされました。';

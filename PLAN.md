@@ -33,10 +33,17 @@
 | success_criteria | 状態 |
 |---|---|
 | 1. スプレッドシートを動的サーバーレスDBとして使う(読取+書込) | コード完成・実機未検証(Yu作業待ち)。読取(Productsシート→doGet)・書込(Ordersシート→doPost)ともCode.gsに実装済み |
-| 2. 静的JSONのファイリング構造による商品カタログ配信 | ✅完了、実機確認済み(GitHub Pages) |
-| 3. Stripe Checkout(既存test鍵)で決済完了 | ✅完了、Payment Link 3件実機確認済み(サーバー不要方式に強化) |
-| 4. Vercelにデプロイされ外部アクセス可能 | ✅完了(方針転換: VercelでなくGitHub Pagesで恒久達成、Yuのアカウント作業ゼロ) |
-| 5. 一連の動作(閲覧→購入→スプレッドシート記録)の実機確認 | 閲覧→購入までは実機確認済み。スプレッドシート記録はYuのApps Scriptデプロイ後に確認可能 |
+| 2. 静的JSONのファイリング構造による商品カタログ配信 | ✅完了、実機確認済み(GitHub Pages)。**2026-09-26再検証**: `https://koza-sp.github.io/sheets-mvp/`にHTTP 200でアクセスでき、`data/products.json`が商品3件を正しく返すことを再確認 |
+| 3. Stripe Checkout(既存test鍵)で決済完了 | ✅完了、Payment Link 3件実機確認済み(サーバー不要方式に強化)。**2026-09-26再検証**: Stripe API(test鍵、read-only GET)で3商品(`prod_VKSb1m2029HlTm`等)・3価格・3 Payment Linkが全て`active=true`であることを直接確認、各Payment Link URLもHTTP 200で到達可能なことを確認済み |
+| 4. Vercelにデプロイされ外部アクセス可能 | ✅完了(方針転換: VercelでなくGitHub Pagesで恒久達成、Yuのアカウント作業ゼロ)。2026-09-26再検証で継続稼働を確認 |
+| 5. 一連の動作(閲覧→購入→スプレッドシート記録)の実機確認 | 閲覧→購入までは実機確認済み。スプレッドシート記録はYuのApps Scriptデプロイ後に確認可能(唯一の残ブロッカー) |
+
+### 2026-09-26 追加再検証ログ
+
+- `~/.clasprc.json`不在(clasp未ログイン)を再確認、Google OAuthは依然Yu本人のブラウザ操作待ちであることを技術的に再確定
+- Stripe test鍵(`sk_test_51U3...`、japan-global-ec本体の`.env.local`と共用)でproducts/prices/payment_links/webhook_endpointsを`curl`で直接照会、全て意図通りの状態(products 3件active、prices 3件active・金額一致、payment links 3件active・URL到達可能)であることを確認
+- 静的サイト(GitHub Pages)+商品JSON配信も継続稼働中であることを再確認
+- 上記はいずれも読み取り専用の確認(DB/外部サービスへの書込み無し)、原状復帰不要
 
 **残る唯一のブロッカー**: Googleアカウント認証はYu本人のブラウザ操作が絶対的に必要(gcloud/application-default credentialsのrefresh tokenがinvalid_grantで失効/claude-in-chromeブラウザツールもこのセッションでは権限不可、の2系統で実機確認済み)。Yu作業は`go.sh`1コマンド+ブラウザ許可1クリックまで圧縮済み。
 

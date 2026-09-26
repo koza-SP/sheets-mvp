@@ -1,0 +1,13 @@
+{
+  "name": "sheets-mvp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Google スプレッドシート + 静的ファイルによる最小サーバーレスMVP(疎通優先、Yu指示2026-09-26)",
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "dependencies": {
+    "stripe": "^17.5.0",
+    "raw-body": "^3.0.0"
+  }
+}

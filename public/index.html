@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sheets MVP — 最小疎通ストア</title>
+<style>
+  :root{
+    --indigo:#38397A; --indigo-hover:#2c2d63; --indigo-50:#EEF0FA;
+    --green:#3A903A; --bg:#F5F6F8; --card:#FFFFFF; --border:#E4E6EA;
+    --text-high:#181A1F; --text-med:#666B76; --radius:12px;
+    --shadow:0 1px 2px rgba(16,24,40,.05),0 1px 3px rgba(16,24,40,.06);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP",sans-serif;background:var(--bg);color:var(--text-high);}
+  header{background:#fff;border-bottom:1px solid var(--border);padding:20px 28px;}
+  header h1{font-size:18px;font-weight:800;}
+  header p{font-size:12px;color:var(--text-med);margin-top:4px;}
+  main{max-width:960px;margin:0 auto;padding:28px;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px;}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
+  .card img{width:100%;height:160px;object-fit:cover;display:block;}
+  .card .body{padding:14px;}
+  .card h3{font-size:14px;font-weight:700;margin-bottom:6px;}
+  .card p{font-size:12px;color:var(--text-med);margin-bottom:10px;min-height:32px;}
+  .card .price{font-size:16px;font-weight:800;margin-bottom:10px;}
+  .buy-btn{width:100%;background:var(--indigo);color:#fff;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;}
+  .buy-btn:hover{background:var(--indigo-hover);}
+  .buy-btn:disabled{opacity:.5;cursor:not-allowed;}
+  #status{margin-top:16px;font-size:13px;padding:10px 14px;border-radius:8px;display:none;}
+  #status.ok{display:block;background:#E8F3E8;color:var(--green);}
+  #status.err{display:block;background:#FBEAE8;color:#C0392B;}
+</style>
+</head>
+<body>
+  <header>
+    <h1>Sheets MVP — 最小疎通ストア</h1>
+    <p>静的JSON(将来Googleスプレッドシート公開CSVに差替可能)+ Stripe Checkout(test mode) による疎通確認用</p>
+  </header>
+  <main>
+    <div id="status"></div>
+    <div class="grid" id="product-grid"></div>
+  </main>
+
+  <script>
+    async function loadProducts() {
+      const res = await fetch('/data/products.json');
+      const data = await res.json();
+      const grid = document.getElementById('product-grid');
+      grid.innerHTML = data.products.map(p => `
+        <div class="card">
+          <img src="${p.imageUrl}" alt="${p.name}">
+          <div class="body">
+            <h3>${p.name}</h3>
+            <p>${p.description}</p>
+            <div class="price">¥${p.priceJpy.toLocaleString()}</div>
+            <button class="buy-btn" data-id="${p.id}">購入(test決済)</button>
+          </div>
+        </div>
+      `).join('');
+
+      grid.querySelectorAll('.buy-btn').forEach(btn => {
+        btn.addEventListener('click', () => startCheckout(btn.dataset.id, btn));
+      });
+    }
+
+    async function startCheckout(productId, btn) {
+      const statusEl = document.getElementById('status');
+      btn.disabled = true;
+      btn.textContent = '処理中...';
+      statusEl.className = '';
+      try {
+        const res = await fetch('/api/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productId })
+        });
+        const json = await res.json();
+        if (!res.ok || !json.url) {
+          throw new Error(json.error || 'checkout session作成に失敗しました');
+        }
+        window.location.href = json.url;
+      } catch (e) {
+        statusEl.className = 'err';
+        statusEl.textContent = 'エラー: ' + e.message;
+        btn.disabled = false;
+        btn.textContent = '購入(test決済)';
+      }
+    }
+
+    // 決済完了後のリダイレクト確認(?success=1 / ?canceled=1)
+    (function checkReturnStatus() {
+      const params = new URLSearchParams(window.location.search);
+      const statusEl = document.getElementById('status');
+      if (params.get('success') === '1') {
+        statusEl.className = 'ok';
+        statusEl.textContent = '✓ 決済が完了しました(test mode)。注文はスプレッドシートに記録される設計です(要Apps Script接続)。';
+      } else if (params.get('canceled') === '1') {
+        statusEl.className = 'err';
+        statusEl.textContent = '決済がキャンセルされました。';
+      }
+    })();
+
+    loadProducts();
+  </script>
+</body>
+</html>

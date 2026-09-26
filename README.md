@@ -27,11 +27,12 @@ Yu `/goal`指示(2026-09-26)「スプレッドシートベースの動的サー�
 
 | # | 項目 | ステータス |
 |---|---|---|
-| 1 | 静的サイト(商品一覧) | ✅完了 |
-| 2 | Stripe Payment Link 3件作成(test mode、既存test鍵`acct_1U3E3G0KGFuk6pVo`利用) | ✅完了、`public/data/products.json`に埋込済 |
-| 3 | GitHub Pages公開 | 実施中(このREADME更新と同じcommitで対応) |
-| 4 | Google Apps Scriptデプロイ | **Yu作業待ち**(下記手順) |
-| 5 | Stripe Webhookエンドポイント登録 | Yuがステップ4のURLを教えてくれ次第、Claudeが代行(Stripe API経由、ダッシュボード操作不要) |
+| 1 | 静的サイト(商品一覧) | ✅完了、公開中: https://koza-sp.github.io/sheets-mvp/ |
+| 2 | Stripe Payment Link 3件作成(test mode、既存test鍵`acct_1U3E3G0KGFuk6pVo`利用) | ✅完了、`public/data/products.json`に埋込済、実機で200確認済み |
+| 3 | GitHub Pages公開(既存gh認証利用、恒久URL、アカウント作業不要) | ✅完了、実機で200確認済み |
+| 4 | 決済完了後のリダイレクト先を実URLに更新 | ✅完了(Stripe API経由) |
+| 5 | Google Apps Scriptデプロイ | **Yu作業待ち(唯一の残タスク)**、下記手順、所要10分 |
+| 6 | Stripe Webhookエンドポイント登録 | Yuがステップ5のURLを教えてくれ次第、Claudeが代行(Stripe API経由、ダッシュボード操作不要) |
 
 ## Yu作業(残り1つだけ、所要10分)
 

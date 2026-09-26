@@ -1,13 +1,12 @@
 {
   "name": "sheets-mvp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
-  "description": "Google スプレッドシート + 静的ファイルによる最小サーバーレスMVP(疎通優先、Yu指示2026-09-26)",
+  "description": "静的ファイル(GitHub Pages) + Stripe Payment Link(test mode) + Google Apps Script による、サーバー無しの最小疎通MVP(Yu指示2026-09-26)",
   "scripts": {
-    "dev": "vercel dev"
+    "serve": "npx serve public"
   },
-  "dependencies": {
-    "stripe": "^17.5.0",
-    "raw-body": "^3.0.0"
+  "devDependencies": {
+    "stripe": "^17.5.0"
   }
 }

@@ -1,67 +1,56 @@
-# Sheets MVP — 最小疎通ストア
+# Sheets MVP — 最小疎通ストア(サーバー無し構成)
 
 Yu `/goal`指示(2026-09-26)「スプレッドシートベースの動的サーバーレス + 静的ファイルのファイリング構造による実質サーバーレスを構築し、外部世界公開までの手続きを圧倒的速度で通す」への対応。`japan-global-ec`本体(PostgreSQL+Prisma+Next.js)とは完全に独立した、別の最小構成プロジェクト。
 
-## アーキテクチャ
+## アーキテクチャ(2026-09-26改訂版、Vercel完全撤廃)
+
+初版はVercel Serverless Functionを使う構成だったが、**Yuのアカウント紐付け作業(claim)が必須になってしまい「外部世界公開までの手続きを全て通す」を完結できなかった**ため、サーバーを一切使わない構成に作り直した。
 
 ```
 [ブラウザ]
    │
-   ├─ GET  /index.html               (静的ファイル、Vercelがそのまま配信)
-   ├─ GET  /data/products.json       (静的ファイル = "ファイリング構造による実質サーバーレス"、将来Googleスプレッドシートの公開CSVに差替可能)
+   ├─ GitHub Pages(静的ファイルのみ、恒久URL、アカウント作業不要 ※既存gh認証を利用して公開済み)
+   │     ├─ index.html
+   │     └─ data/products.json  ← "ファイリング構造による実質サーバーレス"、将来Googleスプレッドシート公開CSVに差替可能
    │
-   ├─ POST /api/checkout             (Vercel Serverless Function、Stripe Checkout Session作成)
-   │        └→ Stripe (test mode、japan-global-ec本体と同じtestアカウント acct_1U3E3G0KGFuk6pVo を再利用)
+   ├─ 「購入」ボタン = Stripe Payment Link(https://buy.stripe.com/test_...)への直リンク
+   │     └→ Stripe側で恒久ホストされるcheckoutページ(サーバー不要、API一発で作成済み)
    │
-   └─ Stripeからのredirect後 ──→ Stripe Webhook ──→ /api/stripe-webhook
-                                                        └→ Google Apps Script Web App (= "スプレッドシートベースの動的サーバーレスDB"書込口)
-                                                             └→ Googleスプレッドシート「Orders」シートに1行追加
+   └─ 決済完了 → Stripe Webhook → Google Apps Script Web App(URLがそのままWebhookエンドポイント)
+                                       └→ Googleスプレッドシート「Orders」シートに1行追加
+                                          (= "スプレッドシートベースの動的サーバーレスDB")
 ```
 
-## セットアップ手順(疎通させるための全手順)
+**このバージョンでは中間サーバーが一切存在しない**(静的ファイル + Stripeホスト型ページ + Google Apps Script のみ)。
 
-### 1. 依存関係インストール(完了済み)
-```bash
-npm install
-```
+## セットアップ状況(2026-09-26時点)
 
-### 2. Vercel環境変数の設定(必須、以下3つ)
-
-| 変数名 | 値 | 備考 |
+| # | 項目 | ステータス |
 |---|---|---|
-| `STRIPE_SECRET_KEY` | `sk_test_51U3...`(japan-global-ec本体の`.env.local`と同じ値) | 新規Stripeアカウント作成は不要、既存test鍵を再利用 |
-| `STRIPE_WEBHOOK_SECRET_MVP` | Stripeダッシュボードで本プロジェクト用エンドポイントを新規登録して取得 | 未設定でも動くが署名検証がスキップされる(疎通確認フェーズの暫定) |
-| `APPS_SCRIPT_WEBAPP_URL` | `google-apps-script/Code.gs`の手順でYuがデプロイして得るURL | **これだけはYuの手動作業が必須**(後述) |
+| 1 | 静的サイト(商品一覧) | ✅完了 |
+| 2 | Stripe Payment Link 3件作成(test mode、既存test鍵`acct_1U3E3G0KGFuk6pVo`利用) | ✅完了、`public/data/products.json`に埋込済 |
+| 3 | GitHub Pages公開 | 実施中(このREADME更新と同じcommitで対応) |
+| 4 | Google Apps Scriptデプロイ | **Yu作業待ち**(下記手順) |
+| 5 | Stripe Webhookエンドポイント登録 | Yuがステップ4のURLを教えてくれ次第、Claudeが代行(Stripe API経由、ダッシュボード操作不要) |
 
-### 3. Googleスプレッドシート側のセットアップ(Yu作業、1回のみ)
+## Yu作業(残り1つだけ、所要10分)
 
 `google-apps-script/Code.gs`のファイル冒頭コメントに詳細手順を記載。要約:
 
 1. Googleスプレッドシート新規作成、シート名を「Orders」に変更
-2. 拡張機能→Apps Script を開き、`Code.gs`の内容を貼り付けて保存
-3. デプロイ→新しいデプロイ→ウェブアプリ→アクセス「全員」→デプロイ
-4. 発行されたURLを`APPS_SCRIPT_WEBAPP_URL`としてVercelに設定
+2. 拡張機能→Apps Script を開き、`Code.gs`の内容を貼り付け
+3. `SHARED_SECRET`の値を任意の文字列に変更(メモしておく)
+4. デプロイ→新しいデプロイ→ウェブアプリ→アクセス「全員」→デプロイ
+5. 発行されたURLの末尾に`?secret=<3で決めた文字列>`を付けたものをClaudeに伝える
 
-### 4. デプロイ
+→ これでClaudeがStripe API経由でWebhook登録を代行し、全工程が完了する。
 
-```bash
-npx vercel deploy --temporary --yes
-```
-(`--temporary`によりVercelアカウントへのログイン無しで即座に公開URLを取得できる。後でYuのアカウントに「claim」して恒久化可能)
+## Payment Link一覧(test mode、既に有効)
 
-### 5. E2E動作確認
+| 商品 | URL |
+|---|---|
+| 宇治抹茶パウダー 100g | https://buy.stripe.com/test_cNi5kvgP63iWcOCdzRew800 |
+| 南部鉄瓶(小) | https://buy.stripe.com/test_6oU7sD6asdXA6qefHZew801 |
+| 有田焼 湯呑みセット | https://buy.stripe.com/test_9B6cMXfL24n06qefHZew802 |
 
-1. 公開URLを開く→商品3件が表示されることを確認
-2. 「購入」ボタン→Stripeのtest checkoutページへ遷移することを確認
-3. test card(`4242 4242 4242 4242`、任意の未来日付/CVC)で決済
-4. `/?success=1`にリダイレクトされることを確認
-5. (Apps Script接続済みなら)Googleスプレッドシートの「Orders」シートに1行追加されていることを確認
-
-## 現状ステータス(2026-09-26)
-
-- [x] 静的商品一覧ページ
-- [x] Stripe Checkout連携(test鍵再利用)
-- [x] Apps Script書込コード作成済み(Yuのデプロイ待ち)
-- [ ] Vercelデプロイ+公開URL取得
-- [ ] E2E実機確認(test決済1回)
-- [ ] Google Apps Script実デプロイ(Yu作業)
+test card: `4242 4242 4242 4242`、任意の未来日付/CVC/郵便番号で決済可能。

@@ -35,7 +35,7 @@
 <body>
   <header>
     <h1>Sheets MVP — 最小疎通ストア</h1>
-    <p>静的JSON(将来Googleスプレッドシート公開CSVに差替可能)+ Stripe Checkout(test mode) による疎通確認用</p>
+    <p>静的ファイルのみ(サーバー無し)+ Stripe Payment Link(test mode、恒久URL)による疎通確認用。GitHub Pagesで公開。</p>
   </header>
   <main>
     <div id="status"></div>
@@ -43,8 +43,12 @@
   </main>
 
   <script>
+    // 2026-09-26改訂: api/checkout.js(Vercel Serverless)を廃止し、
+    // Stripe Payment Link(事前にAPIで作成済み、Stripe側で恒久ホストされるURL)への
+    // 直接リンクに変更。これによりバックエンド無しの純粋な静的サイトになり、
+    // GitHub Pages等どこにでもデプロイでき、Vercelアカウントへの依存が無くなった。
     async function loadProducts() {
-      const res = await fetch('/data/products.json');
+      const res = await fetch('./data/products.json');
       const data = await res.json();
       const grid = document.getElementById('product-grid');
       grid.innerHTML = data.products.map(p => `
@@ -54,38 +58,10 @@
             <h3>${p.name}</h3>
             <p>${p.description}</p>
             <div class="price">¥${p.priceJpy.toLocaleString()}</div>
-            <button class="buy-btn" data-id="${p.id}">購入(test決済)</button>
+            <a class="buy-btn" href="${p.paymentLinkUrl}" style="display:block;text-align:center;text-decoration:none;">購入(test決済)</a>
           </div>
         </div>
       `).join('');
-
-      grid.querySelectorAll('.buy-btn').forEach(btn => {
-        btn.addEventListener('click', () => startCheckout(btn.dataset.id, btn));
-      });
-    }
-
-    async function startCheckout(productId, btn) {
-      const statusEl = document.getElementById('status');
-      btn.disabled = true;
-      btn.textContent = '処理中...';
-      statusEl.className = '';
-      try {
-        const res = await fetch('/api/checkout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ productId })
-        });
-        const json = await res.json();
-        if (!res.ok || !json.url) {
-          throw new Error(json.error || 'checkout session作成に失敗しました');
-        }
-        window.location.href = json.url;
-      } catch (e) {
-        statusEl.className = 'err';
-        statusEl.textContent = 'エラー: ' + e.message;
-        btn.disabled = false;
-        btn.textContent = '購入(test決済)';
-      }
     }
 
     // 決済完了後のリダイレクト確認(?success=1 / ?canceled=1)

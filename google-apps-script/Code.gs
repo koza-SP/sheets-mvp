@@ -57,7 +57,42 @@ function getOrCreateOrdersSheet() {
     sheet.setName('Orders');
     sheet.appendRow(['timestamp', 'sessionId', 'productId', 'amountJpy', 'customerEmail', 'paymentStatus']);
   }
+
+  // "スプレッドシートベースのアプリケーション化": 注文の書込先だけでなく、商品カタログの
+  // 編集先としてもこの同じスプレッドシートを使う。Productsシートが無ければ、
+  // 現行の静的JSON(public/data/products.json)相当の初期3商品で自動生成する。
+  // Yuはこのシートの行を直接編集・追加するだけで、サイト側の商品表示を更新できる
+  // (= 動的サーバーレス。裏でコードを触る必要が無い)。
+  var productsSheet = ss.getSheetByName('Products');
+  if (!productsSheet) {
+    productsSheet = ss.insertSheet('Products');
+    productsSheet.appendRow(['id', 'name', 'priceJpy', 'description', 'paymentLinkUrl', 'imageUrl']);
+    productsSheet.appendRow(['p001', '宇治抹茶パウダー 100g', 1980, '京都府宇治産の高級抹茶パウダー', 'https://buy.stripe.com/test_cNi5kvgP63iWcOCdzRew800', 'https://koza-sp.github.io/sheets-mvp/data/images/p001.svg']);
+    productsSheet.appendRow(['p002', '南部鉄瓶(小)', 12800, '岩手県産、伝統工芸の南部鉄瓶', 'https://buy.stripe.com/test_6oU7sD6asdXA6qefHZew801', 'https://koza-sp.github.io/sheets-mvp/data/images/p002.svg']);
+    productsSheet.appendRow(['p003', '有田焼 湯呑みセット', 4500, '佐賀県有田町の伝統陶磁器、湯呑み2個セット', 'https://buy.stripe.com/test_9B6cMXfL24n06qefHZew802', 'https://koza-sp.github.io/sheets-mvp/data/images/p003.svg']);
+  }
+
   return sheet;
+}
+
+/**
+ * Productsシートの全行をJSON配列として返す(doGetの?action=products用)。
+ * Yuがスプレッドシート上で行を追加/編集/削除すれば、次にサイトを開いた時に即座に反映される
+ * (= "スプレッドシートベースのアプリケーション化"の実体)。
+ */
+function getProductsAsJson() {
+  getOrCreateOrdersSheet(); // Products/Orders両シートの存在を保証(副作用として利用)
+  var props = PropertiesService.getScriptProperties();
+  var ss = SpreadsheetApp.openById(props.getProperty('ORDERS_SPREADSHEET_ID'));
+  var sheet = ss.getSheetByName('Products');
+  var values = sheet.getDataRange().getValues();
+  var headers = values[0];
+  var rows = values.slice(1).filter(function (r) { return r[0]; }); // id列が空の行は無視
+  return rows.map(function (row) {
+    var obj = {};
+    headers.forEach(function (h, i) { obj[h] = row[i]; });
+    return obj;
+  });
 }
 
 function doPost(e) {
@@ -108,6 +143,22 @@ function doPost(e) {
  * 手動でスプレッドシートを今すぐ見たい場合は runManualSetup() をエディタから実行してもよい。
  */
 function doGet(e) {
+  var action = e && e.parameter && e.parameter.action;
+
+  if (action === 'products') {
+    // サイトのトップページがこのURLを ?action=products 付きで呼び、
+    // Productsシートの中身をそのまま商品一覧として動的に表示する
+    try {
+      var products = getProductsAsJson();
+      var out = ContentService.createTextOutput(JSON.stringify({ success: true, products: products }))
+        .setMimeType(ContentService.MimeType.JSON);
+      return out;
+    } catch (err) {
+      return ContentService.createTextOutput(JSON.stringify({ success: false, error: err.message }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+  }
+
   var props = PropertiesService.getScriptProperties();
   var url = props.getProperty('ORDERS_SPREADSHEET_URL') || null;
   return ContentService.createTextOutput(JSON.stringify({

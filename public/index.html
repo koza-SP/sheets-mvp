@@ -47,9 +47,31 @@
     // Stripe Payment Link(事前にAPIで作成済み、Stripe側で恒久ホストされるURL)への
     // 直接リンクに変更。これによりバックエンド無しの純粋な静的サイトになり、
     // GitHub Pages等どこにでもデプロイでき、Vercelアカウントへの依存が無くなった。
+    //
+    // 2026-09-26再改訂: config.jsonにappsScriptUrlが設定されていれば、静的JSONの代わりに
+    // Google Apps Script経由でスプレッドシート(Productsシート)から動的に商品データを取得する。
+    // 取得失敗時(未設定 or CORS等のエラー)は静的JSONへ自動フォールバックし、サイトが
+    // 壊れないようにする("スプレッドシートベースのアプリケーション化"の実体、Yu作業ゼロで有効化)。
     async function loadProducts() {
-      const res = await fetch('./data/products.json');
-      const data = await res.json();
+      let data;
+      try {
+        const configRes = await fetch('./data/config.json');
+        const config = await configRes.json();
+        if (config.appsScriptUrl) {
+          const dynamicRes = await fetch(`${config.appsScriptUrl}?action=products`);
+          const dynamicJson = await dynamicRes.json();
+          if (dynamicJson.success && Array.isArray(dynamicJson.products) && dynamicJson.products.length > 0) {
+            data = { products: dynamicJson.products, source: 'google-sheets (dynamic)' };
+          }
+        }
+      } catch (e) {
+        console.warn('動的取得(Googleスプレッドシート)に失敗、静的JSONにフォールバック:', e.message);
+      }
+      if (!data) {
+        const res = await fetch('./data/products.json');
+        data = await res.json();
+      }
+      console.log('商品データソース:', data.source);
       const grid = document.getElementById('product-grid');
       grid.innerHTML = data.products.map(p => `
         <div class="card">

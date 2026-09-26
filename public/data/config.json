@@ -1,0 +1,4 @@
+{
+  "appsScriptUrl": null,
+  "note": "Yuがgoogle-apps-script/Code.gsをデプロイしてURLを教えてくれたら、Claudeがここにセットする。設定されるとindex.htmlは静的products.jsonの代わりにこのURL(?action=products)から動的に商品データを取得するようになる(=Googleスプレッドシートを直接編集すればサイトの商品一覧が更新される、スプレッドシートベースのアプリケーション化)。nullのままなら自動的に静的JSONにフォールバックする。"
+}

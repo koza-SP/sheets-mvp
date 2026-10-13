@@ -13,9 +13,11 @@
   }
   *{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP",sans-serif;background:var(--bg);color:var(--text-high);}
-  header{background:#fff;border-bottom:1px solid var(--border);padding:20px 28px;}
+  header{background:#fff;border-bottom:1px solid var(--border);padding:20px 28px;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;}
   header h1{font-size:18px;font-weight:800;}
   header p{font-size:12px;color:var(--text-med);margin-top:4px;}
+  header a.lang-switch{font-size:12px;color:var(--indigo);text-decoration:none;border:1px solid var(--border);padding:6px 12px;border-radius:8px;white-space:nowrap;}
+  header a.lang-switch:hover{background:var(--indigo-50);}
   main{max-width:960px;margin:0 auto;padding:28px;}
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px;}
   .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
@@ -34,8 +36,11 @@
 </head>
 <body>
   <header>
-    <h1>Sheets MVP — 最小疎通ストア</h1>
-    <p>静的ファイルのみ(サーバー無し)+ Stripe Payment Link(test mode、恒久URL)による疎通確認用。GitHub Pagesで公開。</p>
+    <div>
+      <h1>Sheets MVP — 最小疎通ストア</h1>
+      <p>静的ファイルのみ(サーバー無し)+ Stripe Payment Link(test mode、恒久URL)による疎通確認用。GitHub Pagesで公開。</p>
+    </div>
+    <a class="lang-switch" href="en/index.html">English</a>
   </header>
   <main>
     <div id="status"></div>

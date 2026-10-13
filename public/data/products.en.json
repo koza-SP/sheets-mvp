@@ -1,0 +1,40 @@
+{
+  "updatedAt": "2026-10-13T00:00:00+09:00",
+  "source": "static-file (English copy, same Stripe Payment Links as Japanese version)",
+  "checkoutMode": "stripe-payment-link",
+  "products": [
+    {
+      "id": "p001",
+      "name": "Uji Matcha Powder 100g",
+      "priceJpy": 1980,
+      "currency": "jpy",
+      "description": "Premium matcha powder from Uji, Kyoto, one of Japan's most historic tea-growing regions.",
+      "imageUrl": "/data/images/p001.svg",
+      "stripeProductId": "prod_VKSb1m2029HlTm",
+      "stripePriceId": "price_1UJngW0KGFuk6pVoiNre1JVL",
+      "paymentLinkUrl": "https://buy.stripe.com/test_cNi5kvgP63iWcOCdzRew800"
+    },
+    {
+      "id": "p002",
+      "name": "Nambu Tekki Cast Iron Kettle (Small)",
+      "priceJpy": 12800,
+      "currency": "jpy",
+      "description": "Traditional cast-iron kettle handcrafted in Iwate Prefecture using centuries-old techniques.",
+      "imageUrl": "/data/images/p002.svg",
+      "stripeProductId": "prod_VKSbSUUEN7efOI",
+      "stripePriceId": "price_1UJngX0KGFuk6pVo8dDJLovr",
+      "paymentLinkUrl": "https://buy.stripe.com/test_6oU7sD6asdXA6qefHZew801"
+    },
+    {
+      "id": "p003",
+      "name": "Arita Ware Teacup Set",
+      "priceJpy": 4500,
+      "currency": "jpy",
+      "description": "A set of two traditional porcelain teacups from Arita, Saga Prefecture, Japan's oldest porcelain-producing town.",
+      "imageUrl": "/data/images/p003.svg",
+      "stripeProductId": "prod_VKSbm5N9MDQVAX",
+      "stripePriceId": "price_1UJngY0KGFuk6pVobLZhpEJY",
+      "paymentLinkUrl": "https://buy.stripe.com/test_9B6cMXfL24n06qefHZew802"
+    }
+  ]
+}

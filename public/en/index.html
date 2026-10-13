@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Japan Craft Store — Minimal Storefront</title>
+<style>
+  :root{
+    --indigo:#38397A; --indigo-hover:#2c2d63; --indigo-50:#EEF0FA;
+    --green:#3A903A; --bg:#F5F6F8; --card:#FFFFFF; --border:#E4E6EA;
+    --text-high:#181A1F; --text-med:#666B76; --radius:12px;
+    --shadow:0 1px 2px rgba(16,24,40,.05),0 1px 3px rgba(16,24,40,.06);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text-high);}
+  header{background:#fff;border-bottom:1px solid var(--border);padding:20px 28px;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;}
+  header h1{font-size:18px;font-weight:800;}
+  header p{font-size:12px;color:var(--text-med);margin-top:4px;}
+  header a.lang-switch{font-size:12px;color:var(--indigo);text-decoration:none;border:1px solid var(--border);padding:6px 12px;border-radius:8px;white-space:nowrap;}
+  header a.lang-switch:hover{background:var(--indigo-50);}
+  main{max-width:960px;margin:0 auto;padding:28px;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px;}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
+  .card img{width:100%;height:160px;object-fit:cover;display:block;}
+  .card .body{padding:14px;}
+  .card h3{font-size:14px;font-weight:700;margin-bottom:6px;}
+  .card p{font-size:12px;color:var(--text-med);margin-bottom:10px;min-height:32px;}
+  .card .price{font-size:16px;font-weight:800;margin-bottom:10px;}
+  .buy-btn{width:100%;background:var(--indigo);color:#fff;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;}
+  .buy-btn:hover{background:var(--indigo-hover);}
+  #status{margin-top:16px;font-size:13px;padding:10px 14px;border-radius:8px;display:none;}
+  #status.ok{display:block;background:#E8F3E8;color:var(--green);}
+  #status.err{display:block;background:#FBEAE8;color:#C0392B;}
+</style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Japan Craft Store</h1>
+      <p>Traditional Japanese crafts, shipped worldwide. Secure checkout via Stripe (test mode).</p>
+    </div>
+    <a class="lang-switch" href="../index.html">日本語</a>
+  </header>
+  <main>
+    <div id="status"></div>
+    <div class="grid" id="product-grid"></div>
+  </main>
+
+  <script>
+    // English storefront — same backend/config as the Japanese page, English copy only.
+    async function loadProducts() {
+      let data;
+      try {
+        const configRes = await fetch('../data/config.json');
+        const config = await configRes.json();
+        if (config.appsScriptUrl) {
+          const dynamicRes = await fetch(`${config.appsScriptUrl}?action=products`);
+          const dynamicJson = await dynamicRes.json();
+          if (dynamicJson.success && Array.isArray(dynamicJson.products) && dynamicJson.products.length > 0) {
+            data = { products: dynamicJson.products, source: 'google-sheets (dynamic)' };
+          }
+        }
+      } catch (e) {
+        console.warn('Dynamic fetch (Google Sheets) failed, falling back to static JSON:', e.message);
+      }
+      if (!data) {
+        const res = await fetch('../data/products.en.json');
+        data = await res.json();
+      }
+      console.log('Product data source:', data.source);
+      const grid = document.getElementById('product-grid');
+      grid.innerHTML = data.products.map(p => `
+        <div class="card">
+          <img src="..${p.imageUrl}" alt="${p.name}">
+          <div class="body">
+            <h3>${p.name}</h3>
+            <p>${p.description}</p>
+            <div class="price">¥${p.priceJpy.toLocaleString()} JPY</div>
+            <a class="buy-btn" href="${p.paymentLinkUrl}" style="display:block;text-align:center;text-decoration:none;">Buy now (test checkout)</a>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    (function checkReturnStatus() {
+      const params = new URLSearchParams(window.location.search);
+      const statusEl = document.getElementById('status');
+      const sessionId = params.get('session_id');
+      if (params.get('success') === '1') {
+        statusEl.className = 'ok';
+        const idLine = sessionId && !sessionId.startsWith('{')
+          ? `<br><span style="font-family:ui-monospace,monospace;font-size:11px;">Order ID: ${sessionId}</span>`
+          : '';
+        statusEl.innerHTML = `✓ Payment completed (test mode).${idLine}<br>This order will be recorded to a Google Sheet once Apps Script integration is enabled.`;
+      } else if (params.get('canceled') === '1') {
+        statusEl.className = 'err';
+        statusEl.textContent = 'Payment was canceled.';
+      }
+    })();
+
+    loadProducts();
+  </script>
+</body>
+</html>

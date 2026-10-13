@@ -103,10 +103,10 @@
         const idLine = sessionId && !sessionId.startsWith('{')
           ? `<br><span style="font-family:ui-monospace,monospace;font-size:11px;">注文番号: ${sessionId}</span>`
           : '';
-        statusEl.innerHTML = `✓ 決済が完了しました(test mode)。${idLine}<br>この注文はGoogleスプレッドシートに記録される設計です(Apps Script接続完了後に有効化)。`;
+        statusEl.innerHTML = `✓ 決済が完了しました(test mode)。${idLine}<br>この注文はGoogleスプレッドシートに記録される設計です(Apps Script接続完了後に有効化)。<br><span style="color:var(--text-med);font-size:12px;">(English speakers: ✓ Payment completed (test mode). This order will be recorded to a Google Sheet once set up.)</span>`;
       } else if (params.get('canceled') === '1') {
         statusEl.className = 'err';
-        statusEl.textContent = '決済がキャンセルされました。';
+        statusEl.textContent = '決済がキャンセルされました。(Payment was canceled.)';
       }
     })();
 

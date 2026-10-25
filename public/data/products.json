@@ -1,7 +1,9 @@
 {
-  "updatedAt": "2026-09-26T00:00:00+09:00",
+  "updatedAt": "2026-10-25T00:00:00+09:00",
   "source": "static-file (次フェーズでGoogleスプレッドシート公開CSVに差替可能)",
   "checkoutMode": "stripe-payment-link (サーバー不要、Stripe側で恒久ホストされるURL、api/checkout.jsは不要になった)",
+  "stripeMode": "live",
+  "note": "2026-10-25: Stripeをlive(本番)モードに切替。以降の購入は実際の決済・実際の課金が発生する。",
   "products": [
     {
       "id": "p001",
@@ -10,9 +12,9 @@
       "currency": "jpy",
       "description": "京都府宇治産の高級抹茶パウダー",
       "imageUrl": "/data/images/p001.svg",
-      "stripeProductId": "prod_VKSb1m2029HlTm",
-      "stripePriceId": "price_1UJngW0KGFuk6pVoiNre1JVL",
-      "paymentLinkUrl": "https://buy.stripe.com/test_cNi5kvgP63iWcOCdzRew800"
+      "stripeProductId": "prod_VVKZgPub6iMbvI",
+      "stripePriceId": "price_1UUJui0KGFuk6pVoBH7DQJ93",
+      "paymentLinkUrl": "https://buy.stripe.com/cNi5kvgP63iWcOCdzRew800"
     },
     {
       "id": "p002",
@@ -21,9 +23,9 @@
       "currency": "jpy",
       "description": "岩手県産、伝統工芸の南部鉄瓶",
       "imageUrl": "/data/images/p002.svg",
-      "stripeProductId": "prod_VKSbSUUEN7efOI",
-      "stripePriceId": "price_1UJngX0KGFuk6pVo8dDJLovr",
-      "paymentLinkUrl": "https://buy.stripe.com/test_6oU7sD6asdXA6qefHZew801"
+      "stripeProductId": "prod_VVKZfT7IM9nlDk",
+      "stripePriceId": "price_1UUJuj0KGFuk6pVo2GNfbibi",
+      "paymentLinkUrl": "https://buy.stripe.com/6oU7sD6asdXA6qefHZew801"
     },
     {
       "id": "p003",
@@ -32,9 +34,9 @@
       "currency": "jpy",
       "description": "佐賀県有田町の伝統陶磁器、湯呑み2個セット",
       "imageUrl": "/data/images/p003.svg",
-      "stripeProductId": "prod_VKSbm5N9MDQVAX",
-      "stripePriceId": "price_1UJngY0KGFuk6pVobLZhpEJY",
-      "paymentLinkUrl": "https://buy.stripe.com/test_9B6cMXfL24n06qefHZew802"
+      "stripeProductId": "prod_VVKZ0yoeGDRIL7",
+      "stripePriceId": "price_1UUJuk0KGFuk6pVo6m6tGg1X",
+      "paymentLinkUrl": "https://buy.stripe.com/9B6cMXfL24n06qefHZew802"
     }
   ]
 }

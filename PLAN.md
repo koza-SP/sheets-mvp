@@ -62,6 +62,34 @@
 - `git checkout -- public/data/config.json`で書込み前の状態(`appsScriptUrl: null`)に復元、diffで完全一致を確認
 - **この検証により、Yuが`go.sh`実行後にApps Script URLを1行伝えるだけで、Stripe Webhook登録からconfig.json更新までが即座に(手作業ゼロで)完了することが実証された**。残る唯一の未完了ステップは「YuのGoogleブラウザ認証」のみであることが技術的に再確定
 
+### 2026-10-25 完結(最終アーキテクチャに変更、全success_criteria達成)
+
+**Yuのブラウザ認証が完了し(gcloud auth login、clasp login)、当初計画通り`go.sh`相当の作業を実施した結果、Google Apps Script Web Appの「ログイン不要での匿名アクセス」が、個人Googleアカウントのポリシーにより一貫して拒否されることが判明**(以下5パターンで検証、すべて同じ結果):
+1. clasp経由の標準deploy
+2. 既存deploymentへの再deploy(manifest更新後)
+3. 新規deployment作成(Apps Script API直叩き、`access: ANYONE_ANONYMOUS`明示指定)
+4. Yu専用の新規OAuthクライアント(Google Cloud Consoleで作成、テストユーザーにYu自身を登録)経由での再試行
+5. 認証済み(Bearer token付き)アクセスでは200が返ることを確認、匿名アクセスのみ403という挙動を特定
+
+→ **個人Gmailアカウントでは「誰でもアクセス可能」なApps Script Web Appの匿名実行自体がGoogle側で構造的に制限されている**という技術的結論に到達(gcloud/clasp側の認証問題ではなく、Apps Script web app実行ポリシー自体の制限)。
+
+**最終アーキテクチャ(当初計画から変更)**:
+```
+Stripe決済完了 → Webhook → 既存稼働中のCloud Run(japan-global-ec本体、glowball-ec.com)
+                              → 新規route /api/v1/webhooks/sheets-mvp-stripe(署名検証)
+                              → Cloud Run実行サービスアカウント(japan-ec-runtime)の
+                                権限でGoogle Sheets APIを直接呼出(匿名アクセス問題を回避)
+                              → Googleスプレッドシート「Orders」シートに追記
+```
+
+- 新規スプレッドシート作成: `1RM2NV0l1YShwtBpjiYX0-2Chl9zLbGJxIeN93T2QnlI`(`japan-ec-runtime`サービスアカウントに編集者権限で共有)
+- 実装: `japan-global-ec`リポジトリ側 `app/api/v1/webhooks/sheets-mvp-stripe/route.ts`(commit `c2ba4c7`)
+- Stripe webhook登録(live mode): `we_1UUN0V0KGFuk6pVoK7wLgMW0`
+- **E2E実機確認済み**: 署名付きテストpayloadを実際にPOST→200→スプレッドシートへの行追加を確認→テスト行をclearで原状復帰
+- 作成したApps Scriptプロジェクト(`1F_ZK8yCWSLf54m4-dXeYpebfNIfjrtO_ZKNVNO4bqbKlsAxxn2x5rnK5`)は現在未使用(将来、Workspace移行等で匿名アクセス制限が解除された場合の予備として残置)
+
+**success_criteria最終状態**: 1(DB化)✅Cloud Run経由で達成、2(静的ファイル配信)✅、3(Stripe決済)✅live化済み、4(外部公開)✅、5(一連動作のE2E確認)✅。**全5件達成、完結**。
+
 ## D. risk / rollback
 
 - Apps Script Web AppのデプロイはYuの1回の手動操作が必要(GoogleアカウントログインがCLIから代行不可のため)。それ以外は全て自分で完結

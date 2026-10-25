@@ -31,8 +31,12 @@ Yu `/goal`指示(2026-09-26)「スプレッドシートベースの動的サー�
 | 2 | Stripe Payment Link 3件作成(test mode、既存test鍵`acct_1U3E3G0KGFuk6pVo`利用) | ✅完了、`public/data/products.json`に埋込済、実機で200確認済み |
 | 3 | GitHub Pages公開(既存gh認証利用、恒久URL、アカウント作業不要) | ✅完了、実機で200確認済み |
 | 4 | 決済完了後のリダイレクト先を実URLに更新 | ✅完了(Stripe API経由) |
-| 5 | Google Apps Scriptデプロイ | **Yu作業待ち(唯一の残タスク)**、下記手順、所要10分 |
-| 6 | Stripe Webhookエンドポイント登録 | Yuがステップ5のURLを教えてくれ次第、Claudeが代行(Stripe API経由、ダッシュボード操作不要) |
+| 5 | Google Apps Scriptデプロイ | ✅検証完了・ただし不採用(2026-10-25: 個人Googleアカウントでは匿名webapp実行が構造的に拒否されることが判明、5パターンで検証済み) |
+| 6 | Stripe Webhookエンドポイント登録 | ✅完了(2026-10-25: 方式変更、下記「最終アーキテクチャ」参照) |
+
+### 最終アーキテクチャ(2026-10-25、Apps Script直叩きから変更)
+
+Apps Script Web Appの匿名アクセスが個人Googleアカウントでは拒否されるため、既に稼働中のCloud Run(japan-global-ec本体、`glowball-ec.com`)を中継点にする方式へ変更。Stripe Webhook → Cloud Run新規route(`/api/v1/webhooks/sheets-mvp-stripe`)→ Cloud Run実行サービスアカウントの権限でGoogle Sheets APIへ直接書込み。スプレッドシート: https://docs.google.com/spreadsheets/d/1RM2NV0l1YShwtBpjiYX0-2Chl9zLbGJxIeN93T2QnlI/edit 。E2E実機確認済み(詳細は`PLAN.md`参照)。
 
 ## Yu作業(残り1つだけ)
 
